@@ -22,7 +22,7 @@ env:
 
 jobs:
   build:
-    name: Build and Test Node App
+    name: Build Node App
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
@@ -59,6 +59,29 @@ jobs:
       with:
         name: buildartifacts
         path: buildartifacts
+  tests:
+    name: Test Node App
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Use Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    # Build and test the project
+    - name: npm install, build, and test
+      run: |
+        cd application
+        npm install
+        npm run build --if-present
+        npm run test --if-present
+    - name: Run unit tests
+      continue-on-error: false
+      run: |
+        cd tests
+        npm install
+        gulp unittest
+
   deploy:
     name: Deploy to azure web app
     needs: build
