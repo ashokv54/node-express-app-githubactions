@@ -31,21 +31,9 @@ jobs:
         
       # Downloading build artifact
       - name: Download Artifacts
-        uses: actions/github-script@v4
+        uses: actions/download-artifact@v2
         with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            script: |
-                const { Octokit } = require('@octokit/rest');
-                const octokit = new Octokit();
-                const response = await octokit.actions.listWorkflowRunArtifacts({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: "${{ inputs.ID }}",
-                });
-
-                // Assuming the workflow only has one artifact
-                const artifact = response.data.artifacts[0];
-                const downloadUrl = artifact.archive_download_url;
+          ref: ${{ inputs.ID }}
       # Uzipping build artifacts
       - name: unzipping build artifact
         uses: montudor/action-zip@v0.1.0
