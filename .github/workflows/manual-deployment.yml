@@ -1,3 +1,5 @@
+name: Manual Deployment workflow
+
 on:
   workflow_dispatch:
     inputs:
