@@ -1,0 +1,63 @@
+on:
+  workflow_dispatch:
+    inputs:
+      ID:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'Enter RUN ID'
+        # Input has to be provided for the workflow to run
+        required: true
+        # The data type of the input
+        type: string
+  
+  
+env:
+  AZURE_WEBAPP_NAME: webapp454   # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: "application"      # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '10.x'                # set this to the node version to use
+
+jobs:
+  deploy:
+    name: Deploy to azure web app
+    runs-on: ubuntu-latest
+    environment:
+      name: 'Development'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Lowercase the repo name and username
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+        
+      # Downloading build artifact
+      - name: Download Artifacts
+        uses: actions/github-script@v4
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            script: |
+                const { Octokit } = require('@octokit/rest');
+                const octokit = new Octokit();
+                const response = await octokit.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: "${{ inputs.ID }}",
+                });
+
+                // Assuming the workflow only has one artifact
+                const artifact = response.data.artifacts[0];
+                const downloadUrl = artifact.archive_download_url;
+      # Uzipping build artifacts
+      - name: unzipping build artifact
+        uses: montudor/action-zip@v0.1.0
+        with:
+         args: unzip -qq ./buildartifacts/application.zip -d .
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}  
+      # Deploy Node app to Azure
+      - name: 'Deploy to Azure WebApp'
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with: 
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
