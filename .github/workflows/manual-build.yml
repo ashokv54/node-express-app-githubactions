@@ -6,28 +6,54 @@ name: Manual workflow
 # or API.
 on:
   workflow_dispatch:
-    # Inputs the workflow accepts.
-    inputs:
-      name:
-        # Friendly description to be shown in the UI instead of 'name'
-        description: 'Person to greet'
-        # Default value if no value is explicitly provided
-        default: 'World'
-        # Input has to be provided for the workflow to run
-        required: true
-        # The data type of the input
-        type: string
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+env:
+  AZURE_WEBAPP_NAME: webapp454   # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: "application"      # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '10.x'                # set this to the node version to use
+
 jobs:
-  # This workflow contains a single job called "greet"
-  greet:
-    # The type of runner that the job will run on
+  build:
+    name: Build Node App
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Runs a single command using the runners shell
+    - uses: actions/checkout@master
+    - name: Use Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    # Build and test the project
+    - name: npm install, build, and test
+      run: |
+        cd application
+        npm install
+        npm run build --if-present
+        npm run test --if-present
+    - name: Run unit tests
+      continue-on-error: false
+      run: |
+        cd tests
+        npm install
+        gulp unittest
+
+    - name: Creating artifact directories
+      run: |
+        mkdir buildartifacts
+    # Archive build artifact
+    - name: Archive Application
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -qq -r ./buildartifacts/application.zip ./application
+    # Uploading application to build artifact
+    - name: Upload Application to Build Artifact
+      continue-on-error: false
+      uses: actions/upload-artifact@v2
+      with:
+        name: buildartifacts
+        path: buildartifacts
+
+
+    # print git run numbers
     - name: Print Run ID
       run: echo "Run ID ${{ github.run_id }}"
     - name: Print Run Number
