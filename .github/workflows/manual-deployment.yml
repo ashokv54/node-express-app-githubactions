@@ -31,10 +31,9 @@ jobs:
         
       # Downloading build artifact
       - name: Download Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          name: buildartifacts
-          ref: ${{ inputs.ID }}
+          name: buildartifacts-{{ inputs.ID }}
       # Uzipping build artifacts
       - name: unzipping build artifact
         uses: montudor/action-zip@v0.1.0
