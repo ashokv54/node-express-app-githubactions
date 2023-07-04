@@ -47,10 +47,11 @@ jobs:
     # Uploading application to build artifact
     - name: Upload Application to Build Artifact
       continue-on-error: false
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: buildartifacts
+        name: buildartifacts-${{github.run_number}}
         path: buildartifacts
+        retention-days: 5
 
 
     # print git run numbers
