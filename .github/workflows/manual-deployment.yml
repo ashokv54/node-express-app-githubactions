@@ -33,7 +33,7 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: buildartifacts-{{ inputs.ID }}
+          name: buildartifacts-3
       # Uzipping build artifacts
       - name: unzipping build artifact
         uses: montudor/action-zip@v0.1.0
